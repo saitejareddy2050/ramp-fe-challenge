@@ -14,19 +14,21 @@ export function App() {
   const { data: transactionsByEmployee, ...transactionsByEmployeeUtils } = useTransactionsByEmployee()
   const [isLoading, setIsLoading] = useState(false)
 
-  const transactions = useMemo(
-    () => paginatedTransactions?.data ?? transactionsByEmployee ?? null,
-    [paginatedTransactions, transactionsByEmployee]
-  )
+
+  const transactions = useMemo(() => paginatedTransactions?.data ?? transactionsByEmployee ?? null, [
+    paginatedTransactions,
+    transactionsByEmployee,
+  ])
 
   const loadAllTransactions = useCallback(async () => {
     setIsLoading(true)
     transactionsByEmployeeUtils.invalidateData()
 
     await employeeUtils.fetchAll()
+    setIsLoading(false)
     await paginatedTransactionsUtils.fetchAll()
 
-    setIsLoading(false)
+    
   }, [employeeUtils, paginatedTransactionsUtils, transactionsByEmployeeUtils])
 
   const loadTransactionsByEmployee = useCallback(
@@ -64,17 +66,22 @@ export function App() {
             if (newValue === null) {
               return
             }
-
-            await loadTransactionsByEmployee(newValue.id)
-          }}
+            if (newValue.id === ''){
+              await loadAllTransactions()
+          }
+          else{
+              await loadTransactionsByEmployee(newValue.id)
+          }
+        }}
         />
 
         <div className="RampBreak--l" />
 
         <div className="RampGrid">
-          <Transactions transactions={transactions} />
+        <Transactions transactions={transactions} />
 
-          {transactions !== null && (
+         
+        {transactions !== null && paginatedTransactions !== null && paginatedTransactions.nextPage !== null && (
             <button
               className="RampButton"
               disabled={paginatedTransactionsUtils.loading}
@@ -90,3 +97,5 @@ export function App() {
     </Fragment>
   )
 }
+
+
